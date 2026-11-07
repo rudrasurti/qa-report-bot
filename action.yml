@@ -1,0 +1,57 @@
+name: QA Report Bot
+description: Posts a test summary (passed, failed, skipped, flaky) from JUnit XML on pull requests and in the job summary.
+author: Rudra Surti
+branding:
+  icon: check-circle
+  color: green
+
+inputs:
+  junit-path:
+    description: Glob for JUnit XML files, for example results/**/*.xml
+    required: true
+  title:
+    description: Heading for the report
+    default: Test results
+  github-token:
+    description: Token used to comment on the pull request
+    default: ${{ github.token }}
+  fail-on-failure:
+    description: Fail this step when any test failed
+    default: "false"
+
+outputs:
+  failed:
+    description: Number of failed tests
+    value: ${{ steps.report.outputs.failed }}
+
+runs:
+  using: composite
+  steps:
+    - id: report
+      shell: bash
+      run: |
+        python3 "${{ github.action_path }}/report.py" --junit "${{ inputs.junit-path }}" --title "${{ inputs.title }}" --out qa-report.md > qa-report.log
+        cat qa-report.md >> "$GITHUB_STEP_SUMMARY"
+        echo "failed=$(grep -oP '^failed=\K\d+' qa-report.log)" >> "$GITHUB_OUTPUT"
+
+    - name: Comment on pull request
+      if: github.event_name == 'pull_request'
+      shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.github-token }}
+        REPO: ${{ github.repository }}
+        PR: ${{ github.event.pull_request.number }}
+      run: |
+        id=$(gh api "repos/$REPO/issues/$PR/comments" --paginate --jq '.[] | select(.body | startswith("<!-- qa-report-bot -->")) | .id' | tail -1)
+        if [ -n "$id" ]; then
+          gh api -X PATCH "repos/$REPO/issues/comments/$id" -F body=@qa-report.md > /dev/null
+        else
+          gh api -X POST "repos/$REPO/issues/$PR/comments" -F body=@qa-report.md > /dev/null
+        fi
+
+    - name: Fail on test failures
+      if: inputs.fail-on-failure == 'true' && steps.report.outputs.failed != '0'
+      shell: bash
+      run: |
+        echo "::error::${{ steps.report.outputs.failed }} test(s) failed"
+        exit 1
