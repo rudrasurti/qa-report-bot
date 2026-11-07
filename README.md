@@ -54,7 +54,7 @@ When the same test appears more than once in a run (the retry pattern), and its 
 
 ```bash
 pip install pytest
-pytest -q tests
+python -m pytest -q tests
 python3 report.py --junit "tests/fixtures/*.xml"
 ```
 
