@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="api" tests="3" failures="0">
+  <testcase classname="booking" name="create" time="0.4"/>
+  <testcase classname="booking" name="read" time="0.2"/>
+  <testcase classname="booking" name="delete" time="0.1"><skipped/></testcase>
+</testsuite>

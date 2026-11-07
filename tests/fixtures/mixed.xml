@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites>
+  <testsuite name="ui" tests="4" failures="2">
+    <testcase classname="login" name="valid user" time="1.2"/>
+    <testcase classname="cart" name="add item" time="0.9"><failure message="Timeout 5000ms waiting for badge">stack</failure></testcase>
+    <testcase classname="cart" name="add item" time="0.8"/>
+    <testcase classname="checkout" name="finish" time="1.5"><failure message="expected 'Thank you' got 'Error'"/></testcase>
+  </testsuite>
+</testsuites>
